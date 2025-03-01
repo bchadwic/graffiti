@@ -1,0 +1,57 @@
+:root {
+    --column-count: 36;
+    --row-count: 25;
+}
+
+body {
+    font-family: "Courier New", monospace;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#outer-color-picker {
+    padding: 10px;
+    background-image: linear-gradient(
+        to left top, red,orange,yellow,green,blue,indigo,black,white);
+}
+
+#inner-color-picker {
+    padding: 5px;
+    background-color: white;
+}
+
+#grid {
+    display: inline-grid;
+    grid-template-columns: repeat(var(--column-count), 1fr);
+}
+
+#grid > div {
+    text-align: center;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none; 
+}
+
+.cursor {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  from {
+    backdrop-filter: invert(70%);
+  }
+
+  to {
+    backdrop-filter: invert(0%);
+  }
+}
