@@ -8,6 +8,7 @@ export class Cursor {
 		this._prev = null;
 		this.justMoved = true;
 		this.justTyped = false;
+		this.justBackspaced = false;
 		this.key = '&nbsp;';
 	}
 
@@ -26,6 +27,7 @@ export class Cursor {
 		this.col = curr-this.row*COLUMN_COUNT
 		this.justMoved = true;
 		this.justTyped = false;
+		this.justBackspaced = false;
 	}
 
 	type(key){
@@ -40,6 +42,7 @@ export class Cursor {
 		}
 		this.justMoved = false;
 		this.justTyped = true;
+		this.justBackspaced = false;
 	}
 
 	backspace(){
@@ -54,6 +57,7 @@ export class Cursor {
 		this.key = '&nbsp;'; // non-collapsing whitespace
 		this.justMoved = true;
 		this.justTyped = false;
+		this.justBackspaced = true;
 	}
 
 	move(direction){
@@ -77,6 +81,8 @@ export class Cursor {
 						this.col = 0;
 				}
 				break
+			case Direction.ENTER:
+				this.col = 0;
 			case Direction.DOWN:
 				this.row++;
 				if(this.row >= ROW_COUNT){
@@ -88,6 +94,7 @@ export class Cursor {
 		}
 		this.justMoved = true;
 		this.justTyped = false;
+		this.justBackspaced = false;
 		console.log(`row: ${this.row}, col: ${this.col}`);
 	}
 }
