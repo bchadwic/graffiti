@@ -4,37 +4,89 @@ import { Grid } from "./grid.js"
 
 class Runner {
   constructor(){
+    this.uuid = crypto.randomUUID();
+    this.socket = new WebSocket('ws://localhost:8080/ws');
     this.grid = new Grid();
     this.cursor = new Cursor();
-    this.red = 20;
-    this.green = 20;
-    this.blue = 20;
+
+    this.red = Math.floor(this.getRandomNumber(20, 255));
+    this.green = Math.floor(this.getRandomNumber(20, 255));
+    this.blue = Math.floor(this.getRandomNumber(20, 255));
+
+    console.log(this.red)
+    console.log(this.green)
+    console.log(this.blue)
+
+    let sliderRed = document.getElementById("slider-red")
+    let sliderGreen = document.getElementById("slider-green")
+    let sliderBlue = document.getElementById("slider-blue")
+
+    sliderRed.value = this.red
+    sliderGreen.value = this.green
+    sliderBlue.value = this.blue
 
     document.addEventListener('keydown', this.typed.bind(this));
-    document.getElementById("slider-red").addEventListener('input', this.slided.bind(this));
-    document.getElementById("slider-green").addEventListener('input', this.slided.bind(this));
-    document.getElementById("slider-blue").addEventListener('input', this.slided.bind(this));
+    sliderRed.addEventListener('input', this.slided.bind(this));
+    sliderGreen.addEventListener('input', this.slided.bind(this));
+    sliderBlue.addEventListener('input', this.slided.bind(this));
 
     for (let i = 0; i < this.grid.cells.length; i++) {
       this.grid.cells[i].addEventListener('click', function(){this.clicked(i);}.bind(this));
+    }
+
+
+    this.socket.addEventListener('open', this.message.bind(this));
+    this.socket.addEventListener('message', this.message.bind(this));
+    this.socket.addEventListener('close', event => {
+      console.log('Disconnected from WebSocket server');
+    });
+    this.socket.addEventListener('error', event => {
+      console.error('WebSocket error:', event);
+    });
+  }
+
+  open(event){
+    // console.log(event);
+    // console.log(event.data);
+  }
+
+  message(event){
+    if(event.data == undefined){
+      return;
+    }
+    let json = JSON.parse(event.data);
+    console.log(json);
+    if(json.type == "load"){
+      for(const cell of json.data){
+        let cellDiv = this.grid.cells[cell.id];
+        cellDiv.innerHTML = String.fromCharCode(cell.key);
+        cellDiv.style.color = `rgb(${cell.red}, ${cell.green}, ${cell.blue})`;
+      }
+    } else if(json.type == "update"){
+      let cell = json.data;
+      if(cell.uuid == this.uuid){
+        console.log("ignoring")
+        return;
+      }
+      let cellDiv = this.grid.cells[cell.id];
+      cellDiv.innerHTML = String.fromCharCode(cell.key);
+      cellDiv.style.color = `rgb(${cell.red}, ${cell.green}, ${cell.blue})`;
     }
   }
 
   slided(elem){
     switch (elem.target.id) {
       case "slider-red":
-        this.red = elem.target.value;
+        this.red = Math.floor(elem.target.value);
         break
       case "slider-green":
-        this.green = elem.target.value;
+        this.green = Math.floor(elem.target.value);
         break
       case "slider-blue":
-        this.blue = elem.target.value;
+        this.blue = Math.floor(elem.target.value);
         break
     }
-
     document.getElementById("outer-color-picker").style.backgroundColor = this.color();
-
   }
 
   clicked(i){
@@ -79,16 +131,29 @@ class Runner {
       if(prev != null){
         prev.classList.remove("cursor");
       }
-      curr.style.color = this.color();
       curr.classList.add("cursor");
     }
     if(this.cursor.justTyped | this.cursor.justBackspaced){
+      curr.style.color = this.color();
       curr.innerHTML = this.cursor.key;
+      let msg = {
+        uuid: this.uuid,
+        id: this.cursor.curr,
+        key: this.cursor.key.charCodeAt(0),
+        red: this.red,
+        green: this.green,
+        blue: this.blue,
+      }
+      this.socket.send(JSON.stringify(msg));
     }
 	}
 
   color(){
     return `rgb(${this.red}, ${this.green}, ${this.blue})`
+  }
+
+  getRandomNumber(min, max) {
+    return Math.random() * (max - min) + min;
   }
 }
 
