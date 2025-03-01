@@ -6,13 +6,38 @@ class Runner {
   constructor(){
     this.grid = new Grid();
     this.cursor = new Cursor();
+    this.red = 20;
+    this.green = 20;
+    this.blue = 20;
+
     document.addEventListener('keydown', this.typed.bind(this));
+    document.getElementById("slider-red").addEventListener('input', this.slided.bind(this));
+    document.getElementById("slider-green").addEventListener('input', this.slided.bind(this));
+    document.getElementById("slider-blue").addEventListener('input', this.slided.bind(this));
+
     for (let i = 0; i < this.grid.cells.length; i++) {
-      this.grid.cells[i].addEventListener('click', function(){this.clickedCell(i);}.bind(this));
+      this.grid.cells[i].addEventListener('click', function(){this.clicked(i);}.bind(this));
     }
   }
 
-  clickedCell(i){
+  slided(elem){
+    switch (elem.target.id) {
+      case "slider-red":
+        this.red = elem.target.value;
+        break
+      case "slider-green":
+        this.green = elem.target.value;
+        break
+      case "slider-blue":
+        this.blue = elem.target.value;
+        break
+    }
+
+    document.getElementById("outer-color-picker").style.backgroundColor = this.color();
+
+  }
+
+  clicked(i){
     this.cursor.curr = i;
     this.render();
   }
@@ -54,14 +79,17 @@ class Runner {
       if(prev != null){
         prev.classList.remove("cursor");
       }
-      // console.log(`prev:${this.cursor.prev} - curr:${this.cursor.curr}`)
-      curr.style.color = "blue";
+      curr.style.color = this.color();
       curr.classList.add("cursor");
     }
     if(this.cursor.justTyped | this.cursor.justBackspaced){
       curr.innerHTML = this.cursor.key;
     }
 	}
+
+  color(){
+    return `rgb(${this.red}, ${this.green}, ${this.blue})`
+  }
 }
 
 new Runner();
