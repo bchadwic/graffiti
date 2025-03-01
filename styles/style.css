@@ -11,22 +11,25 @@ body {
 }
 
 #container {
-    height: 100vh;
+    background-color: black;
 
+    height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
 #outer-color-picker {
+    background-color: rgb(25, 25, 25);
+
     padding: 10px;
-    background-image: linear-gradient(
-        to left top, red,orange,yellow,green,blue,indigo,black,white);
 }
 
 #inner-color-picker {
+    background-color: black;
+
     padding: 5px;
-    background-color: white;
 }
 
 #grid {
@@ -54,4 +57,25 @@ body {
   to {
     backdrop-filter: invert(0%);
   }
+}
+
+#sliders {
+    padding-top: 10px;
+    margin-left: 10px;
+}
+
+.slider {
+    max-width: 30%;
+}
+
+#slider-red {
+    accent-color: rgb(241, 105, 105);
+}
+
+#slider-green {
+    accent-color: rgb(105, 241, 128);
+}
+
+#slider-blue {
+    accent-color: rgb(105, 148, 241);
 }
