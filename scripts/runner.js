@@ -5,7 +5,7 @@ import { Grid } from "./grid.js"
 class Runner {
   constructor(){
     this.uuid = crypto.randomUUID();
-    this.socket = new WebSocket('ws://localhost:8080/ws');
+    this.socket = new WebSocket(`ws://localhost:8080/ws?uuid=${this.uuid}`);
     this.grid = new Grid();
     this.cursor = new Cursor();
 
@@ -34,7 +34,6 @@ class Runner {
       this.grid.cells[i].addEventListener('click', function(){this.clicked(i);}.bind(this));
     }
 
-
     this.socket.addEventListener('open', this.message.bind(this));
     this.socket.addEventListener('message', this.message.bind(this));
     this.socket.addEventListener('close', event => {
@@ -46,8 +45,7 @@ class Runner {
   }
 
   open(event){
-    // console.log(event);
-    // console.log(event.data);
+    console.log(event);
   }
 
   message(event){
@@ -55,8 +53,9 @@ class Runner {
       return;
     }
     let json = JSON.parse(event.data);
-    console.log(json);
+    console.log("event")
     if(json.type == "load"){
+      console.log(json);
       for(const cell of json.data){
         let cellDiv = this.grid.cells[cell.id];
         cellDiv.innerHTML = String.fromCharCode(cell.key);
@@ -64,10 +63,10 @@ class Runner {
       }
     } else if(json.type == "update"){
       let cell = json.data;
-      if(cell.uuid == this.uuid){
-        console.log("ignoring")
-        return;
-      }
+      console.log(`write: uuid: ${this.uuid}, id:${cell.id}, key:${String.fromCharCode(cell.key)}`);
+      // if(this.uuid == cell.uuid){
+      //   return
+      // }
       let cellDiv = this.grid.cells[cell.id];
       cellDiv.innerHTML = String.fromCharCode(cell.key);
       cellDiv.style.color = `rgb(${cell.red}, ${cell.green}, ${cell.blue})`;

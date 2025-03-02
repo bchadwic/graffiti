@@ -54,7 +54,7 @@ export class Cursor {
 			}
 			this._prev = _prev;
 		}
-		this.key = '&nbsp;'; // non-collapsing whitespace
+		this.key = String.fromCharCode(160); // non-collapsing whitespace
 		this.justMoved = true;
 		this.justTyped = false;
 		this.justBackspaced = true;

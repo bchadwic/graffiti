@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -27,75 +24,43 @@ type Cell struct {
 var cells = make([]Cell, 900)
 
 func main() {
-
-	strs := make(chan string)
-
-	go func() {
-		for {
-			fmt.Println("here I am")
-			select {
-			case s := <-strs:
-				fmt.Println(s)
-			}
+	for i := range cells {
+		cells[i] = Cell{
+			Id:    i,
+			Key:   160,
+			Red:   20,
+			Green: 20,
+			Blue:  20,
 		}
-	}()
-
-	time.Sleep(30 * time.Second)
-	strs <- "hello"
-
-	// for i := range cells {
-	// 	cells[i] = Cell{
-	// 		Id:    i,
-	// 		Key:   160,
-	// 		Red:   20,
-	// 		Green: 20,
-	// 		Blue:  20,
-	// 	}
-	// }
-	// http.Handle("/", http.FileServer(http.Dir("./")))
-	// http.HandleFunc("/ws", ws)
-	// http.ListenAndServe(":8080", nil)
+	}
+	server := &Server{
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		broadcast:  make(chan *CellMessage),
+		registry:   make(map[*Client]bool),
+	}
+	go server.run()
+	http.Handle("/", http.FileServer(http.Dir("./")))
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws(server, w, r)
+	})
+	http.ListenAndServe(":8080", nil)
 }
 
 var upgrader = websocket.Upgrader{}
 
-func ws(w http.ResponseWriter, r *http.Request) {
+func ws(server *Server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
-	defer conn.Close()
+	uuid := r.URL.Query().Get("uuid")
+	client := &Client{uuid: uuid, conn: conn, server: server, send: make(chan *CellMessage)}
+	client.server.register <- client
 
-	message := map[string]any{"type": "load", "data": cells}
-	jsonMessage, _ := json.Marshal(message)
-	err = conn.WriteMessage(websocket.TextMessage, jsonMessage)
-	if err != nil {
-		log.Println("write:", err)
-		return
-	}
+	client.conn.WriteJSON(&CellMessage{Type: "load", Data: cells})
 
-	for {
-		mt, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Println(string(message))
-		cell := Cell{}
-		err = json.Unmarshal(message, &cell)
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		cells[cell.Id] = cell
-		fmt.Printf("%v\n", cell)
-		update := map[string]any{"type": "update", "data": cell}
-		jsonMessage, _ = json.Marshal(update)
-		err = conn.WriteMessage(mt, jsonMessage)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	go client.writePump()
+	go client.readUpdated()
 }

@@ -4,6 +4,8 @@
 }
 
 body {
+    background-color: black;
+
     font-family: "Courier New", monospace;
     height: 100%;
     margin: 0;
@@ -11,8 +13,6 @@ body {
 }
 
 #container {
-    background-color: black;
-
     height: 100vh;
     display: flex;
     flex-direction: column;
